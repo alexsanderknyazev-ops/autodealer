@@ -12,7 +12,11 @@ use handlers::{
     car_handlers::{
         get_cars_handler, get_car_by_id_handler, get_cars_by_status_handler,
         create_car_handler, update_car_handler, delete_car_handler, update_car_status_handler,
-        get_car_by_vin_handler
+        get_car_by_vin_handler,
+        // Новые хэндлеры
+        add_completed_campaign_handler, remove_completed_campaign_handler,
+        clear_completed_campaigns_handler, get_pending_campaigns_handler,
+        get_cars_by_completed_campaign_handler
     },
     customer_handlers::{
         get_customers_handler, get_customer_by_id_handler,
@@ -37,6 +41,21 @@ use handlers::{
         get_car_models_handler, get_car_model_by_id_handler, get_car_models_by_brand_handler,
         get_car_models_by_name_handler, create_car_model_handler, update_car_model_handler,
         delete_car_model_handler
+    },
+    work_handlers::{
+        get_works_handler, get_work_by_id_handler, get_work_by_article_handler,
+        get_works_by_brand_handler, get_works_by_car_model_handler, get_works_by_name_handler,
+        create_work_handler, update_work_handler, delete_work_handler
+    },
+    service_campaign_handlers::{
+        get_service_campaigns_handler, get_service_campaign_by_id_handler,
+        get_service_campaign_by_article_handler, get_service_campaigns_by_brand_handler,
+        get_service_campaigns_by_car_model_handler, get_service_campaigns_by_status_handler,
+        get_service_campaigns_by_mandatory_handler, get_service_campaigns_by_completed_handler,
+        get_service_campaigns_by_vin_handler, create_service_campaign_handler,
+        update_service_campaign_handler, delete_service_campaign_handler,
+        update_service_campaign_status_handler, mark_service_campaign_completed_handler,
+        mark_service_campaign_pending_handler
     }
 };
 
@@ -84,6 +103,12 @@ async fn main() -> std::io::Result<()> {
                     .route("/status/{status}", web::get().to(get_cars_by_status_handler))
                     .route("/{id}/status", web::patch().to(update_car_status_handler))
                     .route("/vin/{vin}", web::get().to(get_car_by_vin_handler))
+                    // Новые маршруты для сервисных кампаний
+                    .route("/{car_id}/completed-campaigns/{campaign_id}", web::patch().to(add_completed_campaign_handler))
+                    .route("/{car_id}/completed-campaigns/{campaign_id}", web::delete().to(remove_completed_campaign_handler))
+                    .route("/{car_id}/completed-campaigns", web::delete().to(clear_completed_campaigns_handler))
+                    .route("/{car_id}/pending-campaigns", web::get().to(get_pending_campaigns_handler))
+                    .route("/completed-campaign/{campaign_id}", web::get().to(get_cars_by_completed_campaign_handler))
             )
             // Customer API routes
             .service(
@@ -139,6 +164,38 @@ async fn main() -> std::io::Result<()> {
                     .route("/{id}", web::delete().to(delete_car_model_handler))
                     .route("/brand/{brand_id}", web::get().to(get_car_models_by_brand_handler))
                     .route("/name/{name}", web::get().to(get_car_models_by_name_handler))
+            )
+            // Works API routes
+            .service(
+                web::scope("/api/works")
+                    .route("", web::get().to(get_works_handler))
+                    .route("", web::post().to(create_work_handler))
+                    .route("/{id}", web::get().to(get_work_by_id_handler))
+                    .route("/{id}", web::put().to(update_work_handler))
+                    .route("/{id}", web::delete().to(delete_work_handler))
+                    .route("/article/{article}", web::get().to(get_work_by_article_handler))
+                    .route("/brand/{brand_id}", web::get().to(get_works_by_brand_handler))
+                    .route("/car-model/{car_model_id}", web::get().to(get_works_by_car_model_handler))
+                    .route("/name/{name}", web::get().to(get_works_by_name_handler))
+            )
+            // Service Campaigns API routes
+            .service(
+                web::scope("/api/service-campaigns")
+                    .route("", web::get().to(get_service_campaigns_handler))
+                    .route("", web::post().to(create_service_campaign_handler))
+                    .route("/{id}", web::get().to(get_service_campaign_by_id_handler))
+                    .route("/{id}", web::put().to(update_service_campaign_handler))
+                    .route("/{id}", web::delete().to(delete_service_campaign_handler))
+                    .route("/article/{article}", web::get().to(get_service_campaign_by_article_handler))
+                    .route("/brand/{brand_id}", web::get().to(get_service_campaigns_by_brand_handler))
+                    .route("/car-model/{car_model_id}", web::get().to(get_service_campaigns_by_car_model_handler))
+                    .route("/status/{status}", web::get().to(get_service_campaigns_by_status_handler))
+                    .route("/mandatory/{is_mandatory}", web::get().to(get_service_campaigns_by_mandatory_handler))
+                    .route("/completed/{is_completed}", web::get().to(get_service_campaigns_by_completed_handler))
+                    .route("/vin/{vin}", web::get().to(get_service_campaigns_by_vin_handler))
+                    .route("/{id}/status", web::patch().to(update_service_campaign_status_handler))
+                    .route("/{id}/complete", web::patch().to(mark_service_campaign_completed_handler))
+                    .route("/{id}/pending", web::patch().to(mark_service_campaign_pending_handler))
             )
     })
         .bind((config.server.host.as_str(), config.server.port))?

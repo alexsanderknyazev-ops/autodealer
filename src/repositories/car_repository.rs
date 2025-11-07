@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::Error;
 use uuid::Uuid;
 
-use crate::models::{Car, CreateCarRequest, UpdateCarRequest, CarStatus};
+use crate::models::{Car, CreateCarRequest, UpdateCarRequest, CarStatus, FuelType, Transmission, ServiceCampaign};
 use crate::database::DbPool;
 
 #[async_trait]
@@ -18,6 +18,13 @@ pub trait CarRepository: Send + Sync {
     async fn update(&self, id: Uuid, update_request: &UpdateCarRequest) -> Result<Option<Car>, Error>;
     async fn delete(&self, id: Uuid) -> Result<bool, Error>;
     async fn update_status(&self, id: Uuid, status: CarStatus) -> Result<Option<Car>, Error>;
+
+    // Новые методы для работы с сервисными кампаниями
+    async fn add_completed_campaign(&self, car_id: Uuid, campaign_id: Uuid) -> Result<Option<Car>, Error>;
+    async fn remove_completed_campaign(&self, car_id: Uuid, campaign_id: Uuid) -> Result<Option<Car>, Error>;
+    async fn get_cars_by_completed_campaign(&self, campaign_id: Uuid) -> Result<Vec<Car>, Error>;
+    async fn get_pending_campaigns_for_car(&self, car_id: Uuid) -> Result<Vec<ServiceCampaign>, Error>;
+    async fn clear_completed_campaigns(&self, car_id: Uuid) -> Result<Option<Car>, Error>;
 }
 
 #[derive(Clone)]
@@ -39,7 +46,7 @@ impl CarRepository for CarRepositoryImpl {
             r#"
             SELECT id, brand_id, model_id, year, price, mileage, color, vin,
                    fuel_type as "fuel_type: _", transmission as "transmission: _",
-                   status as "status: _", created_at, updated_at
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
             FROM cars
             ORDER BY created_at DESC
             "#
@@ -54,7 +61,7 @@ impl CarRepository for CarRepositoryImpl {
             r#"
             SELECT id, brand_id, model_id, year, price, mileage, color, vin,
                    fuel_type as "fuel_type: _", transmission as "transmission: _",
-                   status as "status: _", created_at, updated_at
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
             FROM cars
             WHERE id = $1
             "#,
@@ -70,7 +77,7 @@ impl CarRepository for CarRepositoryImpl {
             r#"
             SELECT id, brand_id, model_id, year, price, mileage, color, vin,
                    fuel_type as "fuel_type: _", transmission as "transmission: _",
-                   status as "status: _", created_at, updated_at
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
             FROM cars
             WHERE status = $1
             ORDER BY created_at DESC
@@ -87,7 +94,7 @@ impl CarRepository for CarRepositoryImpl {
             r#"
             SELECT id, brand_id, model_id, year, price, mileage, color, vin,
                    fuel_type as "fuel_type: _", transmission as "transmission: _",
-                   status as "status: _", created_at, updated_at
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
             FROM cars
             WHERE brand_id = $1
             ORDER BY created_at DESC
@@ -104,7 +111,7 @@ impl CarRepository for CarRepositoryImpl {
             r#"
             SELECT id, brand_id, model_id, year, price, mileage, color, vin,
                    fuel_type as "fuel_type: _", transmission as "transmission: _",
-                   status as "status: _", created_at, updated_at
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
             FROM cars
             WHERE model_id = $1
             ORDER BY created_at DESC
@@ -121,7 +128,7 @@ impl CarRepository for CarRepositoryImpl {
             r#"
             SELECT id, brand_id, model_id, year, price, mileage, color, vin,
                    fuel_type as "fuel_type: _", transmission as "transmission: _",
-                   status as "status: _", created_at, updated_at
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
             FROM cars
             WHERE vin = $1
             "#,
@@ -146,16 +153,16 @@ impl CarRepository for CarRepositoryImpl {
         let now = chrono::Utc::now();
 
         let fuel_type_str = match create_request.fuel_type {
-            crate::models::FuelType::Petrol => "Petrol",
-            crate::models::FuelType::Diesel => "Diesel",
-            crate::models::FuelType::Electric => "Electric",
-            crate::models::FuelType::Hybrid => "Hybrid",
+            FuelType::Petrol => "Petrol",
+            FuelType::Diesel => "Diesel",
+            FuelType::Electric => "Electric",
+            FuelType::Hybrid => "Hybrid",
         };
 
         let transmission_str = match create_request.transmission {
-            crate::models::Transmission::Manual => "Manual",
-            crate::models::Transmission::Automatic => "Automatic",
-            crate::models::Transmission::CVT => "CVT",
+            Transmission::Manual => "Manual",
+            Transmission::Automatic => "Automatic",
+            Transmission::CVT => "CVT",
         };
 
         let status_str = "Available";
@@ -168,7 +175,7 @@ impl CarRepository for CarRepositoryImpl {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING id, brand_id, model_id, year, price, mileage, color, vin,
                      fuel_type as "fuel_type: _", transmission as "transmission: _",
-                     status as "status: _", created_at, updated_at
+                     status as "status: _", completed_service_campaigns, created_at, updated_at
             "#,
             Uuid::new_v4(),
             create_request.brand_id,
@@ -194,25 +201,25 @@ impl CarRepository for CarRepositoryImpl {
         if let Some(car) = self.find_by_id(id).await? {
             let fuel_type = update_request.fuel_type.as_ref().unwrap_or(&car.fuel_type);
             let fuel_type_str = match fuel_type {
-                crate::models::FuelType::Petrol => "Petrol",
-                crate::models::FuelType::Diesel => "Diesel",
-                crate::models::FuelType::Electric => "Electric",
-                crate::models::FuelType::Hybrid => "Hybrid",
+                FuelType::Petrol => "Petrol",
+                FuelType::Diesel => "Diesel",
+                FuelType::Electric => "Electric",
+                FuelType::Hybrid => "Hybrid",
             };
 
             let transmission = update_request.transmission.as_ref().unwrap_or(&car.transmission);
             let transmission_str = match transmission {
-                crate::models::Transmission::Manual => "Manual",
-                crate::models::Transmission::Automatic => "Automatic",
-                crate::models::Transmission::CVT => "CVT",
+                Transmission::Manual => "Manual",
+                Transmission::Automatic => "Automatic",
+                Transmission::CVT => "CVT",
             };
 
             let status = update_request.status.as_ref().unwrap_or(&car.status);
             let status_str = match status {
-                crate::models::CarStatus::Available => "Available",
-                crate::models::CarStatus::Reserved => "Reserved",
-                crate::models::CarStatus::Sold => "Sold",
-                crate::models::CarStatus::Maintenance => "Maintenance",
+                CarStatus::Available => "Available",
+                CarStatus::Reserved => "Reserved",
+                CarStatus::Sold => "Sold",
+                CarStatus::Maintenance => "Maintenance",
             };
 
             let updated_car = sqlx::query_as!(
@@ -220,11 +227,12 @@ impl CarRepository for CarRepositoryImpl {
                 r#"
                 UPDATE cars
                 SET brand_id = $1, model_id = $2, year = $3, price = $4, mileage = $5,
-                    color = $6, vin = $7, fuel_type = $8, transmission = $9, status = $10, updated_at = $11
-                WHERE id = $12
+                    color = $6, vin = $7, fuel_type = $8, transmission = $9, status = $10,
+                    completed_service_campaigns = $11, updated_at = $12
+                WHERE id = $13
                 RETURNING id, brand_id, model_id, year, price, mileage, color, vin,
                          fuel_type as "fuel_type: _", transmission as "transmission: _",
-                         status as "status: _", created_at, updated_at
+                         status as "status: _", completed_service_campaigns, created_at, updated_at
                 "#,
                 update_request.brand_id.unwrap_or(car.brand_id),
                 update_request.model_id.unwrap_or(car.model_id),
@@ -236,6 +244,7 @@ impl CarRepository for CarRepositoryImpl {
                 fuel_type_str,
                 transmission_str,
                 status_str,
+                update_request.completed_service_campaigns.as_ref().unwrap_or(&car.completed_service_campaigns),
                 now,
                 id
             )
@@ -277,7 +286,7 @@ impl CarRepository for CarRepositoryImpl {
             WHERE id = $3
             RETURNING id, brand_id, model_id, year, price, mileage, color, vin,
                      fuel_type as "fuel_type: _", transmission as "transmission: _",
-                     status as "status: _", created_at, updated_at
+                     status as "status: _", completed_service_campaigns, created_at, updated_at
             "#,
             status_str,
             now,
@@ -285,5 +294,150 @@ impl CarRepository for CarRepositoryImpl {
         )
             .fetch_optional(&self.pool)
             .await
+    }
+
+    // НОВЫЕ МЕТОДЫ ДЛЯ СЕРВИСНЫХ КАМПАНИЙ
+
+    async fn add_completed_campaign(&self, car_id: Uuid, campaign_id: Uuid) -> Result<Option<Car>, Error> {
+        let now = chrono::Utc::now();
+
+        sqlx::query_as!(
+            Car,
+            r#"
+            UPDATE cars
+            SET completed_service_campaigns = array_append(completed_service_campaigns, $1),
+                updated_at = $2
+            WHERE id = $3
+            AND NOT $1 = ANY(completed_service_campaigns)
+            RETURNING id, brand_id, model_id, year, price, mileage, color, vin,
+                     fuel_type as "fuel_type: _", transmission as "transmission: _",
+                     status as "status: _", completed_service_campaigns, created_at, updated_at
+            "#,
+            campaign_id,
+            now,
+            car_id
+        )
+            .fetch_optional(&self.pool)
+            .await
+    }
+
+    async fn remove_completed_campaign(&self, car_id: Uuid, campaign_id: Uuid) -> Result<Option<Car>, Error> {
+        let now = chrono::Utc::now();
+
+        sqlx::query_as!(
+            Car,
+            r#"
+            UPDATE cars
+            SET completed_service_campaigns = array_remove(completed_service_campaigns, $1),
+                updated_at = $2
+            WHERE id = $3
+            RETURNING id, brand_id, model_id, year, price, mileage, color, vin,
+                     fuel_type as "fuel_type: _", transmission as "transmission: _",
+                     status as "status: _", completed_service_campaigns, created_at, updated_at
+            "#,
+            campaign_id,
+            now,
+            car_id
+        )
+            .fetch_optional(&self.pool)
+            .await
+    }
+
+    async fn clear_completed_campaigns(&self, car_id: Uuid) -> Result<Option<Car>, Error> {
+        let now = chrono::Utc::now();
+
+        sqlx::query_as!(
+            Car,
+            r#"
+            UPDATE cars
+            SET completed_service_campaigns = '{}',
+                updated_at = $1
+            WHERE id = $2
+            RETURNING id, brand_id, model_id, year, price, mileage, color, vin,
+                     fuel_type as "fuel_type: _", transmission as "transmission: _",
+                     status as "status: _", completed_service_campaigns, created_at, updated_at
+            "#,
+            now,
+            car_id
+        )
+            .fetch_optional(&self.pool)
+            .await
+    }
+
+    async fn get_cars_by_completed_campaign(&self, campaign_id: Uuid) -> Result<Vec<Car>, Error> {
+        sqlx::query_as!(
+            Car,
+            r#"
+            SELECT id, brand_id, model_id, year, price, mileage, color, vin,
+                   fuel_type as "fuel_type: _", transmission as "transmission: _",
+                   status as "status: _", completed_service_campaigns, created_at, updated_at
+            FROM cars
+            WHERE $1 = ANY(completed_service_campaigns)
+            ORDER BY created_at DESC
+            "#,
+            campaign_id
+        )
+            .fetch_all(&self.pool)
+            .await
+    }
+
+    async fn get_pending_campaigns_for_car(&self, car_id: Uuid) -> Result<Vec<ServiceCampaign>, Error> {
+        // Получаем автомобиль
+        let car = match self.find_by_id(car_id).await? {
+            Some(car) => car,
+            None => return Ok(Vec::new()),
+        };
+
+        // Используем query! для ручного маппинга
+        let rows = sqlx::query!(
+            r#"
+            SELECT sc.id, sc.article, sc.name, sc.description, sc.brand_id, sc.car_model_id,
+                   sc.target_vins, sc.required_parts, sc.required_works,
+                   sc.is_mandatory, sc.is_completed,
+                   sc.status, sc.created_at, sc.updated_at
+            FROM service_campaigns sc
+            WHERE sc.status = 'active'
+            AND (sc.target_vins = '{}' OR $1 = ANY(sc.target_vins))
+            AND sc.brand_id = $2
+            AND sc.car_model_id = $3
+            AND NOT sc.id = ANY($4)
+            ORDER BY sc.is_mandatory DESC, sc.created_at DESC
+            "#,
+            car.vin,
+            car.brand_id,
+            car.model_id,
+            &car.completed_service_campaigns
+        )
+            .fetch_all(&self.pool)
+            .await?;
+
+        // Ручное преобразование в ServiceCampaign
+        let campaigns = rows.into_iter().map(|row| {
+            let status = match row.status.as_str() {
+                "active" => crate::models::ServiceCampaignStatus::Active,
+                "completed" => crate::models::ServiceCampaignStatus::Completed,
+                "cancelled" => crate::models::ServiceCampaignStatus::Cancelled,
+                _ => crate::models::ServiceCampaignStatus::Active,
+            };
+
+            ServiceCampaign {
+                id: row.id,
+                article: row.article,
+                name: row.name,
+                description: row.description,
+                brand_id: row.brand_id,
+                car_model_id: row.car_model_id,
+                target_vins: row.target_vins,
+                required_parts: row.required_parts,
+                required_works: row.required_works,
+                is_mandatory: row.is_mandatory,
+                is_completed: row.is_completed,
+                status,
+                created_at: row.created_at,
+                updated_at: row.updated_at,
+            }
+        }).collect();
+
+        Ok(campaigns)
     }
 }

@@ -185,3 +185,106 @@ pub async fn update_car_status_handler(
         }
     }
 }
+// PATCH /api/cars/{car_id}/completed-campaigns/{campaign_id} - добавить выполненную сервисную кампанию
+pub async fn add_completed_campaign_handler(
+    db_pool: web::Data<DbPool>,
+    path: web::Path<(Uuid, Uuid)>,
+) -> HttpResponse {
+    let repo = CarRepositoryImpl::new(db_pool.get_ref().clone());
+    let (car_id, campaign_id) = path.into_inner();
+
+    match repo.add_completed_campaign(car_id, campaign_id).await {
+        Ok(Some(car)) => HttpResponse::Ok().json(car),
+        Ok(None) => HttpResponse::NotFound().json(serde_json::json!({
+            "error": "Car not found or campaign already added"
+        })),
+        Err(e) => {
+            eprintln!("Error adding completed campaign to car {}: {}", car_id, e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to add completed campaign"
+            }))
+        }
+    }
+}
+
+// DELETE /api/cars/{car_id}/completed-campaigns/{campaign_id} - удалить выполненную сервисную кампанию
+pub async fn remove_completed_campaign_handler(
+    db_pool: web::Data<DbPool>,
+    path: web::Path<(Uuid, Uuid)>,
+) -> HttpResponse {
+    let repo = CarRepositoryImpl::new(db_pool.get_ref().clone());
+    let (car_id, campaign_id) = path.into_inner();
+
+    match repo.remove_completed_campaign(car_id, campaign_id).await {
+        Ok(Some(car)) => HttpResponse::Ok().json(car),
+        Ok(None) => HttpResponse::NotFound().json(serde_json::json!({
+            "error": "Car not found"
+        })),
+        Err(e) => {
+            eprintln!("Error removing completed campaign from car {}: {}", car_id, e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to remove completed campaign"
+            }))
+        }
+    }
+}
+
+// DELETE /api/cars/{car_id}/completed-campaigns - очистить все выполненные сервисные кампании
+pub async fn clear_completed_campaigns_handler(
+    db_pool: web::Data<DbPool>,
+    path: web::Path<Uuid>,
+) -> HttpResponse {
+    let repo = CarRepositoryImpl::new(db_pool.get_ref().clone());
+    let car_id = path.into_inner();
+
+    match repo.clear_completed_campaigns(car_id).await {
+        Ok(Some(car)) => HttpResponse::Ok().json(car),
+        Ok(None) => HttpResponse::NotFound().json(serde_json::json!({
+            "error": "Car not found"
+        })),
+        Err(e) => {
+            eprintln!("Error clearing completed campaigns for car {}: {}", car_id, e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to clear completed campaigns"
+            }))
+        }
+    }
+}
+
+// GET /api/cars/{car_id}/pending-campaigns - получить ожидающие сервисные кампании для автомобиля
+pub async fn get_pending_campaigns_handler(
+    db_pool: web::Data<DbPool>,
+    path: web::Path<Uuid>,
+) -> HttpResponse {
+    let repo = CarRepositoryImpl::new(db_pool.get_ref().clone());
+    let car_id = path.into_inner();
+
+    match repo.get_pending_campaigns_for_car(car_id).await {
+        Ok(campaigns) => HttpResponse::Ok().json(campaigns),
+        Err(e) => {
+            eprintln!("Error fetching pending campaigns for car {}: {}", car_id, e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to fetch pending campaigns"
+            }))
+        }
+    }
+}
+
+// GET /api/cars/completed-campaign/{campaign_id} - получить автомобили с выполненной сервисной кампанией
+pub async fn get_cars_by_completed_campaign_handler(
+    db_pool: web::Data<DbPool>,
+    path: web::Path<Uuid>,
+) -> HttpResponse {
+    let repo = CarRepositoryImpl::new(db_pool.get_ref().clone());
+    let campaign_id = path.into_inner();
+
+    match repo.get_cars_by_completed_campaign(campaign_id).await {
+        Ok(cars) => HttpResponse::Ok().json(cars),
+        Err(e) => {
+            eprintln!("Error fetching cars by completed campaign {}: {}", campaign_id, e);
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to fetch cars"
+            }))
+        }
+    }
+}

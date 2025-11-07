@@ -20,6 +20,7 @@ pub struct Car {
     pub fuel_type: FuelType,
     pub transmission: Transmission,
     pub status: CarStatus,
+    pub completed_service_campaigns: Vec<Uuid>, // ← ДОБАВЛЯЕМ
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -55,4 +56,5 @@ pub struct UpdateCarRequest {
     pub fuel_type: Option<FuelType>,
     pub transmission: Option<Transmission>,
     pub status: Option<CarStatus>,
+    pub completed_service_campaigns: Option<Vec<Uuid>>, // ← ДОБАВЛЯЕМ
 }
