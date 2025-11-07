@@ -1,0 +1,16 @@
+pub mod car_handlers;
+pub mod customer_handlers;
+pub mod purchase_handlers;
+pub mod part_handlers;
+
+pub mod brand_handlers;
+pub mod car_model_handlers;
+
+
+
+pub use car_handlers::*;
+pub use customer_handlers::*;
+pub use purchase_handlers::*;
+pub use part_handlers::*;
+pub use brand_handlers::*;
+pub use car_model_handlers::*;
