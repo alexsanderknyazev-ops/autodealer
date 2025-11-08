@@ -6,6 +6,7 @@ pub mod brand_handlers;
 pub mod car_model_handlers;
 pub mod work_handlers;
 pub mod service_campaign_handlers;
+pub mod warehouse_handler;
 
 pub use car_handlers::*;
 pub use customer_handlers::*;
@@ -15,3 +16,4 @@ pub use brand_handlers::*;
 pub use car_model_handlers::*;
 pub use work_handlers::*;
 pub use service_campaign_handlers::*;
+pub use warehouse_handler::*;

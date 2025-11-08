@@ -7,6 +7,7 @@ pub mod car_model;
 pub mod work;
 pub mod enums;
 mod service_campaigns;
+pub mod warehouse;
 
 pub use car::{Car, CreateCarRequest, UpdateCarRequest};
 pub use customer::{Customer, CreateCustomerRequest};

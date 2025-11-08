@@ -13,7 +13,6 @@ use handlers::{
         get_cars_handler, get_car_by_id_handler, get_cars_by_status_handler,
         create_car_handler, update_car_handler, delete_car_handler, update_car_status_handler,
         get_car_by_vin_handler,
-        // Новые хэндлеры
         add_completed_campaign_handler, remove_completed_campaign_handler,
         clear_completed_campaigns_handler, get_pending_campaigns_handler,
         get_cars_by_completed_campaign_handler
@@ -56,9 +55,15 @@ use handlers::{
         update_service_campaign_handler, delete_service_campaign_handler,
         update_service_campaign_status_handler, mark_service_campaign_completed_handler,
         mark_service_campaign_pending_handler
+    },
+    warehouse_handler::{
+        get_warehouse_items_handler, get_low_stock_items_handler, get_warehouse_item_by_id_handler,
+        get_warehouse_item_by_part_id_handler, get_warehouse_item_by_article_handler,
+        get_warehouse_items_by_location_handler, create_warehouse_item_handler,
+        update_warehouse_item_handler, delete_warehouse_item_handler, update_stock_handler,
+        get_total_inventory_value_handler
     }
 };
-
 #[get("/")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("AutoDealer API is working!")
@@ -196,6 +201,21 @@ async fn main() -> std::io::Result<()> {
                     .route("/{id}/status", web::patch().to(update_service_campaign_status_handler))
                     .route("/{id}/complete", web::patch().to(mark_service_campaign_completed_handler))
                     .route("/{id}/pending", web::patch().to(mark_service_campaign_pending_handler))
+            )
+            // Warehouse API routes
+            .service(
+                web::scope("/api/warehouse")
+                    .route("", web::get().to(get_warehouse_items_handler))
+                    .route("", web::post().to(create_warehouse_item_handler))
+                    .route("/low-stock", web::get().to(get_low_stock_items_handler))
+                    .route("/total-value", web::get().to(get_total_inventory_value_handler))
+                    .route("/{id}", web::get().to(get_warehouse_item_by_id_handler))
+                    .route("/{id}", web::put().to(update_warehouse_item_handler))
+                    .route("/{id}", web::delete().to(delete_warehouse_item_handler))
+                    .route("/part/{part_id}", web::get().to(get_warehouse_item_by_part_id_handler))
+                    .route("/article/{article}", web::get().to(get_warehouse_item_by_article_handler))
+                    .route("/location/{location}", web::get().to(get_warehouse_items_by_location_handler))
+                    .route("/{part_id}/stock", web::put().to(update_stock_handler))
             )
     })
         .bind((config.server.host.as_str(), config.server.port))?

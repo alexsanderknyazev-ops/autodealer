@@ -6,6 +6,7 @@ pub mod brand_repository; // ← ДОБАВЛЯЕМ
 pub mod car_model_repository;
 pub mod work_repository;
 pub mod service_campaign_repository;
+pub mod warehouse_repository;
 
 pub use car_repository::{CarRepository, CarRepositoryImpl};
 pub use customer_repository::{CustomerRepository, CustomerRepositoryImpl};
