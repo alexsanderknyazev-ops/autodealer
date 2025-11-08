@@ -1,0 +1,874 @@
+openapi: 3.0.0
+info:
+  title: AutoDealer Cars API
+  description: Microservice for automotive inventory and service campaigns management
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@autodealer.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/cars:
+    get:
+      summary: Get all cars
+      description: Retrieve list of all cars with detailed information
+      operationId: getCars
+      tags:
+        - Cars
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create car
+      description: Create new car in inventory
+      operationId: createCar
+      tags:
+        - Cars
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCarRequest'
+      responses:
+        '201':
+          description: Car created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/{id}:
+    get:
+      summary: Get car by ID
+      description: Retrieve specific car by its ID
+      operationId: getCarById
+      tags:
+        - Cars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update car
+      description: Update existing car information
+      operationId: updateCar
+      tags:
+        - Cars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCarRequest'
+      responses:
+        '200':
+          description: Car updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete car
+      description: Remove car from inventory
+      operationId: deleteCar
+      tags:
+        - Cars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+      responses:
+        '204':
+          description: Car deleted successfully
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/vin/{vin}:
+    get:
+      summary: Get car by VIN
+      description: Retrieve car by VIN number
+      operationId: getCarByVin
+      tags:
+        - Cars
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          description: Vehicle Identification Number
+          schema:
+            type: string
+            example: "TESTVIN1234567890"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/status/{status}:
+    get:
+      summary: Get cars by status
+      description: Retrieve cars filtered by status
+      operationId: getCarsByStatus
+      tags:
+        - Cars
+      parameters:
+        - name: status
+          in: path
+          required: true
+          description: Car status
+          schema:
+            type: string
+            enum: [available, sold, reserved, maintenance]
+            example: "available"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/{id}/status:
+    patch:
+      summary: Update car status
+      description: Update status of existing car
+      operationId: updateCarStatus
+      tags:
+        - Cars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [available, sold, reserved, maintenance]
+                  example: "sold"
+      responses:
+        '200':
+          description: Car status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/{car_id}/completed-campaigns/{campaign_id}:
+    patch:
+      summary: Add completed service campaign
+      description: Add service campaign to car's completed campaigns list
+      operationId: addCompletedCampaign
+      tags:
+        - Cars
+      parameters:
+        - name: car_id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+        - name: campaign_id
+          in: path
+          required: true
+          description: Service campaign UUID
+          schema:
+            type: string
+            format: uuid
+            example: "33333333-3333-3333-3333-333333333333"
+      responses:
+        '200':
+          description: Completed campaign added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found or campaign already added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Remove completed service campaign
+      description: Remove service campaign from car's completed campaigns list
+      operationId: removeCompletedCampaign
+      tags:
+        - Cars
+      parameters:
+        - name: car_id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+        - name: campaign_id
+          in: path
+          required: true
+          description: Service campaign UUID
+          schema:
+            type: string
+            format: uuid
+            example: "33333333-3333-3333-3333-333333333333"
+      responses:
+        '200':
+          description: Completed campaign removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/{car_id}/completed-campaigns:
+    delete:
+      summary: Clear all completed service campaigns
+      description: Remove all service campaigns from car's completed campaigns list
+      operationId: clearCompletedCampaigns
+      tags:
+        - Cars
+      parameters:
+        - name: car_id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+      responses:
+        '200':
+          description: All completed campaigns cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/{car_id}/pending-campaigns:
+    get:
+      summary: Get pending service campaigns
+      description: Retrieve pending service campaigns for specific car
+      operationId: getPendingCampaigns
+      tags:
+        - Cars
+      parameters:
+        - name: car_id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "99999999-9999-9999-9999-999999999999"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceCampaign'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cars/completed-campaign/{campaign_id}:
+    get:
+      summary: Get cars by completed campaign
+      description: Retrieve cars that have specific service campaign completed
+      operationId: getCarsByCompletedCampaign
+      tags:
+        - Cars
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          description: Service campaign UUID
+          schema:
+            type: string
+            format: uuid
+            example: "33333333-3333-3333-3333-333333333333"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Car:
+      type: object
+      required:
+        - id
+        - vin
+        - brand
+        - model
+        - year
+        - status
+        - price
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for car
+          example: "99999999-9999-9999-9999-999999999999"
+        vin:
+          type: string
+          description: Vehicle Identification Number
+          example: "TESTVIN1234567890"
+        brand:
+          type: string
+          description: Car brand
+          example: "Toyota"
+        model:
+          type: string
+          description: Car model
+          example: "Camry"
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2030
+          description: Manufacturing year
+          example: 2023
+        status:
+          type: string
+          enum: [available, sold, reserved, maintenance]
+          description: Current status of the car
+          example: "available"
+        price:
+          type: number
+          format: double
+          minimum: 0
+          description: Car price
+          example: 2500000.00
+        color:
+          type: string
+          nullable: true
+          description: Car color
+          example: "Черный"
+        mileage:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Car mileage in kilometers
+          example: 15000
+        engine_capacity:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Engine capacity in liters
+          example: 2.5
+        fuel_type:
+          type: string
+          nullable: true
+          description: Fuel type
+          enum: [petrol, diesel, hybrid, electric, gas]
+          example: "petrol"
+        transmission:
+          type: string
+          nullable: true
+          description: Transmission type
+          enum: [automatic, manual, CVT, robotized]
+          example: "automatic"
+        drive_type:
+          type: string
+          nullable: true
+          description: Drive type
+          enum: [fwd, rwd, awd, 4wd]
+          example: "fwd"
+        body_type:
+          type: string
+          nullable: true
+          description: Body type
+          enum: [sedan, hatchback, coupe, convertible, wagon, suv, crossover, minivan, pickup]
+          example: "sedan"
+        description:
+          type: string
+          nullable: true
+          description: Car description
+          example: "Комфортабельный седан в отличном состоянии"
+        features:
+          type: array
+          items:
+            type: string
+          description: Car features and options
+          example: ["климат-контроль", "кожаный салон", "панорамная крыша"]
+        completed_campaigns:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of completed service campaign IDs
+          example: ["33333333-3333-3333-3333-333333333333", "44444444-4444-4444-4444-444444444444"]
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2023-10-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2023-10-01T12:00:00Z"
+
+    CreateCarRequest:
+      type: object
+      required:
+        - vin
+        - brand
+        - model
+        - year
+        - price
+      properties:
+        vin:
+          type: string
+          description: Vehicle Identification Number
+          example: "TESTVIN1234567890"
+        brand:
+          type: string
+          description: Car brand
+          example: "Toyota"
+        model:
+          type: string
+          description: Car model
+          example: "Camry"
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2030
+          description: Manufacturing year
+          example: 2023
+        price:
+          type: number
+          format: double
+          minimum: 0
+          description: Car price
+          example: 2500000.00
+        color:
+          type: string
+          nullable: true
+          description: Car color
+          example: "Черный"
+        mileage:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Car mileage in kilometers
+          example: 15000
+        engine_capacity:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Engine capacity in liters
+          example: 2.5
+        fuel_type:
+          type: string
+          nullable: true
+          description: Fuel type
+          enum: [petrol, diesel, hybrid, electric, gas]
+          example: "petrol"
+        transmission:
+          type: string
+          nullable: true
+          description: Transmission type
+          enum: [automatic, manual, CVT, robotized]
+          example: "automatic"
+        drive_type:
+          type: string
+          nullable: true
+          description: Drive type
+          enum: [fwd, rwd, awd, 4wd]
+          example: "fwd"
+        body_type:
+          type: string
+          nullable: true
+          description: Body type
+          enum: [sedan, hatchback, coupe, convertible, wagon, suv, crossover, minivan, pickup]
+          example: "sedan"
+        description:
+          type: string
+          nullable: true
+          description: Car description
+          example: "Комфортабельный седан в отличном состоянии"
+        features:
+          type: array
+          items:
+            type: string
+          description: Car features and options
+          example: ["климат-контроль", "кожаный салон"]
+
+    UpdateCarRequest:
+      type: object
+      properties:
+        vin:
+          type: string
+          description: Vehicle Identification Number
+          example: "TESTVIN1234567890"
+        brand:
+          type: string
+          description: Car brand
+          example: "Toyota"
+        model:
+          type: string
+          description: Car model
+          example: "Camry"
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2030
+          description: Manufacturing year
+          example: 2023
+        price:
+          type: number
+          format: double
+          minimum: 0
+          description: Car price
+          example: 2400000.00
+        color:
+          type: string
+          nullable: true
+          description: Car color
+          example: "Черный"
+        mileage:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Car mileage in kilometers
+          example: 16000
+        engine_capacity:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Engine capacity in liters
+          example: 2.5
+        fuel_type:
+          type: string
+          nullable: true
+          description: Fuel type
+          enum: [petrol, diesel, hybrid, electric, gas]
+          example: "petrol"
+        transmission:
+          type: string
+          nullable: true
+          description: Transmission type
+          enum: [automatic, manual, CVT, robotized]
+          example: "automatic"
+        drive_type:
+          type: string
+          nullable: true
+          description: Drive type
+          enum: [fwd, rwd, awd, 4wd]
+          example: "fwd"
+        body_type:
+          type: string
+          nullable: true
+          description: Body type
+          enum: [sedan, hatchback, coupe, convertible, wagon, suv, crossover, minivan, pickup]
+          example: "sedan"
+        description:
+          type: string
+          nullable: true
+          description: Car description
+          example: "Комфортабельный седан в отличном состоянии, полная комплектация"
+        features:
+          type: array
+          items:
+            type: string
+          description: Car features and options
+          example: ["климат-контроль", "кожаный салон", "панорамная крыша"]
+
+    ServiceCampaign:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        article:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        is_mandatory:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Car not found"
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: object
+          description: Validation error details
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  parameters:
+    CarId:
+      name: id
+      in: path
+      required: true
+      description: Car UUID
+      schema:
+        type: string
+        format: uuid
+
+    Vin:
+      name: vin
+      in: path
+      required: true
+      description: Vehicle Identification Number
+      schema:
+        type: string
+
+    Status:
+      name: status
+      in: path
+      required: true
+      description: Car status
+      schema:
+        type: string
+        enum: [available, sold, reserved, maintenance]
+
+    CampaignId:
+      name: campaign_id
+      in: path
+      required: true
+      description: Service campaign UUID
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Cars
+    description: Automotive inventory and service campaigns management operations

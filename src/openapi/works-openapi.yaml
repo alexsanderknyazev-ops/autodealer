@@ -1,0 +1,648 @@
+openapi: 3.0.0
+info:
+  title: AutoDealer Works API
+  description: Microservice for automotive works and services management
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@autodealer.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/works:
+    get:
+      summary: Get all works
+      description: Retrieve list of all automotive works and services
+      operationId: getWorks
+      tags:
+        - Works
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Work'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create new work
+      description: Add new automotive work or service to catalog
+      operationId: createWork
+      tags:
+        - Works
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkRequest'
+      responses:
+        '201':
+          description: Work created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: Work article already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/works/{id}:
+    get:
+      summary: Get work by ID
+      description: Retrieve specific work by its ID
+      operationId: getWorkById
+      tags:
+        - Works
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work UUID
+          schema:
+            type: string
+            format: uuid
+            example: "22222222-2222-2222-2222-222222222222"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '404':
+          description: Work not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update work
+      description: Update existing work information
+      operationId: updateWork
+      tags:
+        - Works
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work UUID
+          schema:
+            type: string
+            format: uuid
+            example: "22222222-2222-2222-2222-222222222222"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkRequest'
+      responses:
+        '200':
+          description: Work updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Work not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete work
+      description: Remove work from catalog
+      operationId: deleteWork
+      tags:
+        - Works
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Work UUID
+          schema:
+            type: string
+            format: uuid
+            example: "22222222-2222-2222-2222-222222222222"
+      responses:
+        '204':
+          description: Work deleted successfully
+        '404':
+          description: Work not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/works/article/{article}:
+    get:
+      summary: Get work by article
+      description: Retrieve work using article number
+      operationId: getWorkByArticle
+      tags:
+        - Works
+      parameters:
+        - name: article
+          in: path
+          required: true
+          description: Work article number
+          schema:
+            type: string
+            example: "WRK-OIL-CHANGE"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '404':
+          description: Work not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/works/brand/{brand_id}:
+    get:
+      summary: Get works by brand
+      description: Retrieve works filtered by car brand
+      operationId: getWorksByBrand
+      tags:
+        - Works
+      parameters:
+        - name: brand_id
+          in: path
+          required: true
+          description: Brand UUID
+          schema:
+            type: string
+            format: uuid
+            example: "c886f366-430a-45cd-918d-51b0c8776719"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Work'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/works/car-model/{car_model_id}:
+    get:
+      summary: Get works by car model
+      description: Retrieve works compatible with specific car model
+      operationId: getWorksByCarModel
+      tags:
+        - Works
+      parameters:
+        - name: car_model_id
+          in: path
+          required: true
+          description: Car model UUID
+          schema:
+            type: string
+            format: uuid
+            example: "eb172777-f94e-4bd6-aa82-161deabd3876"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Work'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/works/name/{name}:
+    get:
+      summary: Get works by name
+      description: Search works by name (partial match)
+      operationId: getWorksByName
+      tags:
+        - Works
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Work name (supports partial match)
+          schema:
+            type: string
+            example: "замена масла"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Work'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Work:
+      type: object
+      required:
+        - id
+        - article
+        - name
+        - description
+        - standard_time_hours
+        - labor_cost
+        - brand_id
+        - car_model_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for work
+          example: "22222222-2222-2222-2222-222222222222"
+        article:
+          type: string
+          description: Unique article number for the work
+          example: "WRK-OIL-CHANGE"
+        name:
+          type: string
+          description: Work name
+          example: "Замена моторного масла и фильтра"
+        description:
+          type: string
+          description: Detailed description of the work
+          example: "Полная замена моторного масла и масляного фильтра, проверка уровня"
+        standard_time_hours:
+          type: number
+          format: double
+          minimum: 0
+          description: Standard time required in hours
+          example: 1.5
+        labor_cost:
+          type: number
+          format: double
+          minimum: 0
+          description: Labor cost for the work
+          example: 2500.00
+        required_parts:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: List of required part IDs
+          example: ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"]
+        compatible_vins:
+          type: array
+          items:
+            type: string
+          description: Compatible vehicle VIN codes
+          example: ["TESTVIN1234567890", "TESTVIN0987654321"]
+        brand_id:
+          type: string
+          format: uuid
+          description: Reference to car brand
+          example: "c886f366-430a-45cd-918d-51b0c8776719"
+        car_model_id:
+          type: string
+          format: uuid
+          description: Reference to car model
+          example: "eb172777-f94e-4bd6-aa82-161deabd3876"
+        category:
+          type: string
+          description: Work category
+          enum: [maintenance, repair, diagnostics, bodywork, electrical]
+          example: "maintenance"
+        difficulty_level:
+          type: string
+          description: Difficulty level of the work
+          enum: [easy, medium, hard, expert]
+          example: "easy"
+        is_active:
+          type: boolean
+          description: Whether the work is active and available
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2023-10-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2023-10-01T12:00:00Z"
+
+    CreateWorkRequest:
+      type: object
+      required:
+        - article
+        - name
+        - description
+        - standard_time_hours
+        - labor_cost
+        - brand_id
+        - car_model_id
+      properties:
+        article:
+          type: string
+          description: Unique article number
+          example: "WRK-OIL-CHANGE"
+        name:
+          type: string
+          description: Work name
+          example: "Замена моторного масла и фильтра"
+        description:
+          type: string
+          description: Detailed description
+          example: "Полная замена моторного масла и масляного фильтра"
+        standard_time_hours:
+          type: number
+          format: double
+          minimum: 0
+          description: Standard time in hours
+          example: 1.5
+        labor_cost:
+          type: number
+          format: double
+          minimum: 0
+          description: Labor cost
+          example: 2500.00
+        required_parts:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Required part IDs
+          example: ["11111111-1111-1111-1111-111111111111"]
+        compatible_vins:
+          type: array
+          items:
+            type: string
+          description: Compatible VIN codes
+          example: ["TESTVIN1234567890"]
+        brand_id:
+          type: string
+          format: uuid
+          description: Car brand reference
+          example: "c886f366-430a-45cd-918d-51b0c8776719"
+        car_model_id:
+          type: string
+          format: uuid
+          description: Car model reference
+          example: "eb172777-f94e-4bd6-aa82-161deabd3876"
+        category:
+          type: string
+          enum: [maintenance, repair, diagnostics, bodywork, electrical]
+          description: Work category
+          example: "maintenance"
+        difficulty_level:
+          type: string
+          enum: [easy, medium, hard, expert]
+          description: Difficulty level
+          example: "easy"
+        is_active:
+          type: boolean
+          description: Active status
+          example: true
+
+    UpdateWorkRequest:
+      type: object
+      properties:
+        article:
+          type: string
+          description: Unique article number
+          example: "WRK-OIL-CHANGE-UPD"
+        name:
+          type: string
+          description: Work name
+          example: "Замена моторного масла и фильтра (обновленная)"
+        description:
+          type: string
+          description: Detailed description
+          example: "Полная замена моторного масла, фильтра и диагностика"
+        standard_time_hours:
+          type: number
+          format: double
+          minimum: 0
+          description: Standard time in hours
+          example: 2.0
+        labor_cost:
+          type: number
+          format: double
+          minimum: 0
+          description: Labor cost
+          example: 3000.00
+        required_parts:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Required part IDs
+          example: ["11111111-1111-1111-1111-111111111111", "33333333-3333-3333-3333-333333333333"]
+        compatible_vins:
+          type: array
+          items:
+            type: string
+          description: Compatible VIN codes
+          example: ["TESTVIN1234567890", "TESTVIN1111111111"]
+        brand_id:
+          type: string
+          format: uuid
+          description: Car brand reference
+          example: "c886f366-430a-45cd-918d-51b0c8776719"
+        car_model_id:
+          type: string
+          format: uuid
+          description: Car model reference
+          example: "eb172777-f94e-4bd6-aa82-161deabd3876"
+        category:
+          type: string
+          enum: [maintenance, repair, diagnostics, bodywork, electrical]
+          description: Work category
+          example: "maintenance"
+        difficulty_level:
+          type: string
+          enum: [easy, medium, hard, expert]
+          description: Difficulty level
+          example: "medium"
+        is_active:
+          type: boolean
+          description: Active status
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Work not found"
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: object
+          description: Validation error details
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  parameters:
+    WorkId:
+      name: id
+      in: path
+      required: true
+      description: Work UUID
+      schema:
+        type: string
+        format: uuid
+
+    Article:
+      name: article
+      in: path
+      required: true
+      description: Work article number
+      schema:
+        type: string
+
+    BrandId:
+      name: brand_id
+      in: path
+      required: true
+      description: Brand UUID
+      schema:
+        type: string
+        format: uuid
+
+    CarModelId:
+      name: car_model_id
+      in: path
+      required: true
+      description: Car model UUID
+      schema:
+        type: string
+        format: uuid
+
+    WorkName:
+      name: name
+      in: path
+      required: true
+      description: Work name
+      schema:
+        type: string
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Works
+    description: Automotive works and services management operations

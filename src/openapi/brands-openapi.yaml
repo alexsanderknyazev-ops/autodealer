@@ -1,0 +1,552 @@
+openapi: 3.0.0
+info:
+  title: AutoDealer Brands API
+  description: Microservice for automotive brands management
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@autodealer.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/brands:
+    get:
+      summary: Get all brands
+      description: Retrieve list of all automotive brands
+      operationId: getBrands
+      tags:
+        - Brands
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Brand'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create brand
+      description: Create new automotive brand
+      operationId: createBrand
+      tags:
+        - Brands
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBrandRequest'
+      responses:
+        '201':
+          description: Brand created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brand'
+        '400':
+          description: Validation failed or brand name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/brands/{id}:
+    get:
+      summary: Get brand by ID
+      description: Retrieve specific brand by its ID
+      operationId: getBrandById
+      tags:
+        - Brands
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Brand UUID
+          schema:
+            type: string
+            format: uuid
+            example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brand'
+        '404':
+          description: Brand not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update brand
+      description: Update existing brand information
+      operationId: updateBrand
+      tags:
+        - Brands
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Brand UUID
+          schema:
+            type: string
+            format: uuid
+            example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBrandRequest'
+      responses:
+        '200':
+          description: Brand updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brand'
+        '400':
+          description: Validation failed or brand name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Brand not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete brand
+      description: Remove brand from catalog
+      operationId: deleteBrand
+      tags:
+        - Brands
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Brand UUID
+          schema:
+            type: string
+            format: uuid
+            example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+      responses:
+        '204':
+          description: Brand deleted successfully
+        '404':
+          description: Brand not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/brands/name/{name}:
+    get:
+      summary: Get brand by name
+      description: Retrieve brand by exact name match
+      operationId: getBrandByName
+      tags:
+        - Brands
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Brand name
+          schema:
+            type: string
+            example: "Toyota"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brand'
+        '404':
+          description: Brand not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/brands/country/{country}:
+    get:
+      summary: Get brands by country
+      description: Retrieve brands filtered by country
+      operationId: getBrandsByCountry
+      tags:
+        - Brands
+      parameters:
+        - name: country
+          in: path
+          required: true
+          description: Country name
+          schema:
+            type: string
+            example: "Japan"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Brand'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Brand:
+      type: object
+      required:
+        - id
+        - name
+        - country
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for brand
+          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        name:
+          type: string
+          description: Brand name
+          example: "Toyota"
+        country:
+          type: string
+          description: Brand country of origin
+          example: "Japan"
+        description:
+          type: string
+          nullable: true
+          description: Brand description
+          example: "Японский автопроизводитель, один из крупнейших в мире"
+        founded_year:
+          type: integer
+          minimum: 1800
+          maximum: 2030
+          nullable: true
+          description: Year the brand was founded
+          example: 1937
+        headquarters:
+          type: string
+          nullable: true
+          description: Brand headquarters location
+          example: "Тойота, Айти, Япония"
+        website:
+          type: string
+          format: uri
+          nullable: true
+          description: Official brand website
+          example: "https://www.toyota.com"
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Brand logo URL
+          example: "https://example.com/toyota-logo.png"
+        is_active:
+          type: boolean
+          description: Whether the brand is active
+          example: true
+        vehicle_types:
+          type: array
+          items:
+            type: string
+          description: Types of vehicles produced
+          example: ["sedan", "suv", "truck", "hybrid"]
+        price_segment:
+          type: string
+          nullable: true
+          description: Price segment of the brand
+          enum: [economy, mid_range, premium, luxury]
+          example: "mid_range"
+        reliability_rating:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 5
+          nullable: true
+          description: Reliability rating (0-5)
+          example: 4.5
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2023-10-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2023-10-01T12:00:00Z"
+
+    CreateBrandRequest:
+      type: object
+      required:
+        - name
+        - country
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Brand name (must be unique)
+          example: "Toyota"
+        country:
+          type: string
+          description: Brand country of origin
+          example: "Japan"
+        description:
+          type: string
+          nullable: true
+          description: Brand description
+          example: "Японский автопроизводитель, один из крупнейших в мире"
+        founded_year:
+          type: integer
+          minimum: 1800
+          maximum: 2030
+          nullable: true
+          description: Year the brand was founded
+          example: 1937
+        headquarters:
+          type: string
+          nullable: true
+          description: Brand headquarters location
+          example: "Тойота, Айти, Япония"
+        website:
+          type: string
+          format: uri
+          nullable: true
+          description: Official brand website
+          example: "https://www.toyota.com"
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Brand logo URL
+          example: "https://example.com/toyota-logo.png"
+        is_active:
+          type: boolean
+          description: Whether the brand is active
+          example: true
+        vehicle_types:
+          type: array
+          items:
+            type: string
+          description: Types of vehicles produced
+          example: ["sedan", "suv", "truck"]
+        price_segment:
+          type: string
+          nullable: true
+          description: Price segment of the brand
+          enum: [economy, mid_range, premium, luxury]
+          example: "mid_range"
+        reliability_rating:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 5
+          nullable: true
+          description: Reliability rating (0-5)
+          example: 4.5
+
+    UpdateBrandRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Brand name (must be unique)
+          example: "Toyota Motor Corporation"
+        country:
+          type: string
+          description: Brand country of origin
+          example: "Japan"
+        description:
+          type: string
+          nullable: true
+          description: Brand description
+          example: "Крупнейший японский автопроизводитель"
+        founded_year:
+          type: integer
+          minimum: 1800
+          maximum: 2030
+          nullable: true
+          description: Year the brand was founded
+          example: 1937
+        headquarters:
+          type: string
+          nullable: true
+          description: Brand headquarters location
+          example: "Тойота, Айти, Япония"
+        website:
+          type: string
+          format: uri
+          nullable: true
+          description: Official brand website
+          example: "https://www.toyota-global.com"
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Brand logo URL
+          example: "https://example.com/toyota-new-logo.png"
+        is_active:
+          type: boolean
+          description: Whether the brand is active
+          example: true
+        vehicle_types:
+          type: array
+          items:
+            type: string
+          description: Types of vehicles produced
+          example: ["sedan", "suv", "truck", "hybrid", "electric"]
+        price_segment:
+          type: string
+          nullable: true
+          description: Price segment of the brand
+          enum: [economy, mid_range, premium, luxury]
+          example: "mid_range"
+        reliability_rating:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 5
+          nullable: true
+          description: Reliability rating (0-5)
+          example: 4.7
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Brand not found"
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: object
+          description: Validation error details
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  parameters:
+    BrandId:
+      name: id
+      in: path
+      required: true
+      description: Brand UUID
+      schema:
+        type: string
+        format: uuid
+
+    BrandName:
+      name: name
+      in: path
+      required: true
+      description: Brand name
+      schema:
+        type: string
+
+    Country:
+      name: country
+      in: path
+      required: true
+      description: Country name
+      schema:
+        type: string
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Brands
+    description: Automotive brands management operations

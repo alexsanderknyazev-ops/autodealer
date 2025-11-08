@@ -1,0 +1,475 @@
+paths:
+  # Base endpoints
+  /:
+    get:
+      summary: API status check
+      operationId: hello
+      responses:
+        '200':
+          description: API is working
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "AutoDealer API is working!"
+
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  message:
+                    type: string
+                    example: "AutoDealer API is running"
+
+  # Warehouse endpoints
+  /api/warehouse:
+    get:
+      summary: Get all warehouse items
+      operationId: getWarehouseItems
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WarehouseItemWithPart'
+        '500':
+          description: Internal server error
+
+    post:
+      summary: Create warehouse item
+      operationId: createWarehouseItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWarehouseItemRequest'
+      responses:
+        '201':
+          description: Warehouse item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseItem'
+        '400':
+          description: Validation error
+        '409':
+          description: Warehouse item for this part already exists
+        '500':
+          description: Internal server error
+
+  /api/warehouse/low-stock:
+    get:
+      summary: Get low stock items
+      operationId: getLowStockItems
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WarehouseItemWithPart'
+        '500':
+          description: Internal server error
+
+  /api/warehouse/total-value:
+    get:
+      summary: Get total inventory value
+      operationId: getTotalInventoryValue
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_value:
+                    type: number
+                    format: double
+        '500':
+          description: Internal server error
+
+  /api/warehouse/{id}:
+    get:
+      summary: Get warehouse item by ID
+      operationId: getWarehouseItemById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseItemWithPart'
+        '404':
+          description: Warehouse item not found
+        '500':
+          description: Internal server error
+
+    put:
+      summary: Update warehouse item
+      operationId: updateWarehouseItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWarehouseItemRequest'
+      responses:
+        '200':
+          description: Warehouse item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseItem'
+        '400':
+          description: Validation error
+        '404':
+          description: Warehouse item not found
+        '500':
+          description: Internal server error
+
+    delete:
+      summary: Delete warehouse item
+      operationId: deleteWarehouseItem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Warehouse item deleted successfully
+        '404':
+          description: Warehouse item not found
+        '500':
+          description: Internal server error
+
+  /api/warehouse/part/{part_id}:
+    get:
+      summary: Get warehouse item by part ID
+      operationId: getWarehouseItemByPartId
+      parameters:
+        - name: part_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseItem'
+        '404':
+          description: Warehouse item not found for this part
+        '500':
+          description: Internal server error
+
+  /api/warehouse/article/{article}:
+    get:
+      summary: Get warehouse item by article
+      operationId: getWarehouseItemByArticle
+      parameters:
+        - name: article
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseItemWithPart'
+        '404':
+          description: Warehouse item not found
+        '500':
+          description: Internal server error
+
+  /api/warehouse/location/{location}:
+    get:
+      summary: Get warehouse items by location
+      operationId: getWarehouseItemsByLocation
+      parameters:
+        - name: location
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WarehouseItemWithPart'
+        '500':
+          description: Internal server error
+
+  /api/warehouse/{part_id}/stock:
+    put:
+      summary: Update stock quantity
+      operationId: updateStock
+      parameters:
+        - name: part_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockMovementRequest'
+      responses:
+        '200':
+          description: Stock updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WarehouseItem'
+        '400':
+          description: Validation error
+        '404':
+          description: Warehouse item not found or insufficient stock
+        '500':
+          description: Internal server error
+
+  # Parts endpoints
+  /api/parts:
+    get:
+      summary: Get all parts
+      operationId: getParts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Part'
+        '500':
+          description: Internal server error
+
+    post:
+      summary: Create new part
+      operationId: createPart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePartRequest'
+      responses:
+        '201':
+          description: Part created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+        '400':
+          description: Validation error or article already exists
+        '500':
+          description: Internal server error
+
+  /api/parts/{id}:
+    get:
+      summary: Get part by ID
+      operationId: getPartById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+        '404':
+          description: Part not found
+        '500':
+          description: Internal server error
+
+    put:
+      summary: Update part
+      operationId: updatePart
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePartRequest'
+      responses:
+        '200':
+          description: Part updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+        '400':
+          description: Validation error
+        '404':
+          description: Part not found
+        '500':
+          description: Internal server error
+
+    delete:
+      summary: Delete part
+      operationId: deletePart
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Part deleted successfully
+        '404':
+          description: Part not found
+        '500':
+          description: Internal server error
+
+  /api/parts/article/{article}:
+    get:
+      summary: Get part by article
+      operationId: getPartByArticle
+      parameters:
+        - name: article
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+        '404':
+          description: Part not found
+        '500':
+          description: Internal server error
+
+  /api/parts/brand/{brand_id}:
+    get:
+      summary: Get parts by brand
+      operationId: getPartsByBrand
+      parameters:
+        - name: brand_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Part'
+        '500':
+          description: Internal server error
+
+  /api/parts/car-model/{car_model_id}:
+    get:
+      summary: Get parts by car model
+      operationId: getPartsByCarModel
+      parameters:
+        - name: car_model_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Part'
+        '500':
+          description: Internal server error
+
+  /api/parts/vin/{vin}:
+    get:
+      summary: Get parts by VIN
+      operationId: getPartsByVin
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Part'
+        '500':
+          description: Internal server error

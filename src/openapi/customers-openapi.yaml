@@ -1,0 +1,435 @@
+openapi: 3.0.0
+info:
+  title: AutoDealer Customers API
+  description: Microservice for automotive customers management
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@autodealer.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/customers:
+    get:
+      summary: Get all customers
+      description: Retrieve list of all customers
+      operationId: getCustomers
+      tags:
+        - Customers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create customer
+      description: Create new customer
+      operationId: createCustomer
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Validation failed or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/customers/{id}:
+    get:
+      summary: Get customer by ID
+      description: Retrieve specific customer by its ID
+      operationId: getCustomerById
+      tags:
+        - Customers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+            example: "77777777-7777-7777-7777-777777777777"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update customer
+      description: Update existing customer information
+      operationId: updateCustomer
+      tags:
+        - Customers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+            example: "77777777-7777-7777-7777-777777777777"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete customer
+      description: Remove customer from database
+      operationId: deleteCustomer
+      tags:
+        - Customers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+            example: "77777777-7777-7777-7777-777777777777"
+      responses:
+        '204':
+          description: Customer deleted successfully
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Customer:
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+        - phone
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for customer
+          example: "77777777-7777-7777-7777-777777777777"
+        first_name:
+          type: string
+          description: Customer first name
+          example: "Иван"
+        last_name:
+          type: string
+          description: Customer last name
+          example: "Иванов"
+        email:
+          type: string
+          format: email
+          description: Customer email address
+          example: "ivan.ivanov@example.com"
+        phone:
+          type: string
+          description: Customer phone number
+          example: "+79161234567"
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          description: Customer date of birth
+          example: "1985-05-15"
+        address:
+          type: string
+          nullable: true
+          description: Customer address
+          example: "г. Москва, ул. Пушкина, д. 10"
+        passport_number:
+          type: string
+          nullable: true
+          description: Passport number
+          example: "4510 123456"
+        passport_issued_by:
+          type: string
+          nullable: true
+          description: Passport issuing authority
+          example: "ОУФМС России по г. Москве"
+        passport_issue_date:
+          type: string
+          format: date
+          nullable: true
+          description: Passport issue date
+          example: "2015-06-20"
+        driver_license_number:
+          type: string
+          nullable: true
+          description: Driver license number
+          example: "77 AA 123456"
+        driver_license_category:
+          type: string
+          nullable: true
+          description: Driver license categories
+          example: "B, C"
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes about customer
+          example: "Постоянный клиент, предпочитает Toyota"
+        is_active:
+          type: boolean
+          description: Whether customer is active
+          example: true
+        preferred_brand:
+          type: string
+          nullable: true
+          description: Preferred car brand
+          example: "Toyota"
+        preferred_contact_method:
+          type: string
+          enum: [phone, email, sms, whatsapp]
+          nullable: true
+          description: Preferred contact method
+          example: "phone"
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2023-10-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2023-10-01T12:00:00Z"
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+        - phone
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          description: Customer first name
+          example: "Иван"
+        last_name:
+          type: string
+          minLength: 1
+          description: Customer last name
+          example: "Иванов"
+        email:
+          type: string
+          format: email
+          description: Customer email address (must be unique)
+          example: "ivan.ivanov@example.com"
+        phone:
+          type: string
+          description: Customer phone number
+          example: "+79161234567"
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          description: Customer date of birth
+          example: "1985-05-15"
+        address:
+          type: string
+          nullable: true
+          description: Customer address
+          example: "г. Москва, ул. Пушкина, д. 10"
+        passport_number:
+          type: string
+          nullable: true
+          description: Passport number
+          example: "4510 123456"
+        passport_issued_by:
+          type: string
+          nullable: true
+          description: Passport issuing authority
+          example: "ОУФМС России по г. Москве"
+        passport_issue_date:
+          type: string
+          format: date
+          nullable: true
+          description: Passport issue date
+          example: "2015-06-20"
+        driver_license_number:
+          type: string
+          nullable: true
+          description: Driver license number
+          example: "77 AA 123456"
+        driver_license_category:
+          type: string
+          nullable: true
+          description: Driver license categories
+          example: "B, C"
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes about customer
+          example: "Постоянный клиент, предпочитает Toyota"
+        is_active:
+          type: boolean
+          description: Whether customer is active
+          example: true
+        preferred_brand:
+          type: string
+          nullable: true
+          description: Preferred car brand
+          example: "Toyota"
+        preferred_contact_method:
+          type: string
+          enum: [phone, email, sms, whatsapp]
+          nullable: true
+          description: Preferred contact method
+          example: "phone"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Customer not found"
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: object
+          description: Validation error details
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  parameters:
+    CustomerId:
+      name: id
+      in: path
+      required: true
+      description: Customer UUID
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Customers
+    description: Automotive customers management operations

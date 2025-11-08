@@ -1,0 +1,497 @@
+openapi: 3.0.0
+info:
+  title: AutoDealer Purchases API
+  description: Microservice for automotive purchase requests management
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@autodealer.com
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /api/purchases:
+    get:
+      summary: Get all purchase requests
+      description: Retrieve list of all purchase requests
+      operationId: getPurchases
+      tags:
+        - Purchases
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PurchaseRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create purchase request
+      description: Create new purchase request for a car
+      operationId: createPurchase
+      tags:
+        - Purchases
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePurchaseRequest'
+      responses:
+        '201':
+          description: Purchase request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseRequest'
+        '400':
+          description: Validation failed, car not found, customer not found, or request already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/purchases/{id}:
+    get:
+      summary: Get purchase request by ID
+      description: Retrieve specific purchase request by its ID
+      operationId: getPurchaseById
+      tags:
+        - Purchases
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Purchase request UUID
+          schema:
+            type: string
+            format: uuid
+            example: "44444444-4444-4444-4444-444444444444"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseRequest'
+        '404':
+          description: Purchase request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete purchase request
+      description: Remove purchase request
+      operationId: deletePurchase
+      tags:
+        - Purchases
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Purchase request UUID
+          schema:
+            type: string
+            format: uuid
+            example: "44444444-4444-4444-4444-444444444444"
+      responses:
+        '204':
+          description: Purchase request deleted successfully
+        '404':
+          description: Purchase request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/purchases/customer/{customer_id}:
+    get:
+      summary: Get purchase requests by customer
+      description: Retrieve purchase requests for specific customer
+      operationId: getPurchasesByCustomer
+      tags:
+        - Purchases
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+            example: "55555555-5555-5555-5555-555555555555"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PurchaseRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/purchases/car/{car_id}:
+    get:
+      summary: Get purchase requests by car
+      description: Retrieve purchase requests for specific car
+      operationId: getPurchasesByCar
+      tags:
+        - Purchases
+      parameters:
+        - name: car_id
+          in: path
+          required: true
+          description: Car UUID
+          schema:
+            type: string
+            format: uuid
+            example: "66666666-6666-6666-6666-666666666666"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PurchaseRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/purchases/{id}/status:
+    patch:
+      summary: Update purchase request status
+      description: Update status of existing purchase request
+      operationId: updatePurchaseStatus
+      tags:
+        - Purchases
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Purchase request UUID
+          schema:
+            type: string
+            format: uuid
+            example: "44444444-4444-4444-4444-444444444444"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [pending, approved, rejected, cancelled, completed]
+                  example: "approved"
+      responses:
+        '200':
+          description: Purchase request status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseRequest'
+        '404':
+          description: Purchase request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    PurchaseRequest:
+      type: object
+      required:
+        - id
+        - customer_id
+        - car_id
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for purchase request
+          example: "44444444-4444-4444-4444-444444444444"
+        customer_id:
+          type: string
+          format: uuid
+          description: Reference to customer
+          example: "55555555-5555-5555-5555-555555555555"
+        car_id:
+          type: string
+          format: uuid
+          description: Reference to car
+          example: "66666666-6666-6666-6666-666666666666"
+        status:
+          type: string
+          enum: [pending, approved, rejected, cancelled, completed]
+          description: Current status of the purchase request
+          example: "pending"
+        customer_name:
+          type: string
+          description: Customer name (from join)
+          example: "Иван Иванов"
+        customer_phone:
+          type: string
+          description: Customer phone (from join)
+          example: "+79161234567"
+        customer_email:
+          type: string
+          description: Customer email (from join)
+          example: "ivan@example.com"
+        car_brand:
+          type: string
+          description: Car brand (from join)
+          example: "Toyota"
+        car_model:
+          type: string
+          description: Car model (from join)
+          example: "Camry"
+        car_vin:
+          type: string
+          description: Car VIN (from join)
+          example: "TESTVIN1234567890"
+        car_year:
+          type: integer
+          description: Car year (from join)
+          example: 2023
+        car_price:
+          type: number
+          format: double
+          description: Car price (from join)
+          example: 2500000.00
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes for the purchase request
+          example: "Клиент интересуется кредитом"
+        requested_price:
+          type: number
+          format: double
+          nullable: true
+          description: Requested price by customer
+          example: 2400000.00
+        trade_in_car:
+          type: string
+          nullable: true
+          description: Trade-in car details
+          example: "Toyota Corolla 2018"
+        financing_type:
+          type: string
+          nullable: true
+          description: Financing type requested
+          enum: [cash, credit, lease]
+          example: "credit"
+        test_drive_requested:
+          type: boolean
+          description: Whether test drive was requested
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2023-10-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2023-10-01T12:00:00Z"
+
+    CreatePurchaseRequest:
+      type: object
+      required:
+        - customer_id
+        - car_id
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          description: Customer UUID
+          example: "55555555-5555-5555-5555-555555555555"
+        car_id:
+          type: string
+          format: uuid
+          description: Car UUID
+          example: "66666666-6666-6666-6666-666666666666"
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes
+          example: "Клиент интересуется кредитом"
+        requested_price:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Requested price by customer
+          example: 2400000.00
+        trade_in_car:
+          type: string
+          nullable: true
+          description: Trade-in car details
+          example: "Toyota Corolla 2018"
+        financing_type:
+          type: string
+          nullable: true
+          description: Financing type requested
+          enum: [cash, credit, lease]
+          example: "credit"
+        test_drive_requested:
+          type: boolean
+          description: Whether test drive is requested
+          example: true
+
+    RequestStatus:
+      type: string
+      enum: [pending, approved, rejected, cancelled, completed]
+      description: Purchase request status
+      example: "approved"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Purchase request not found"
+        details:
+          type: object
+          nullable: true
+          description: Additional error details
+          additionalProperties: true
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: object
+          description: Validation error details
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  parameters:
+    PurchaseRequestId:
+      name: id
+      in: path
+      required: true
+      description: Purchase request UUID
+      schema:
+        type: string
+        format: uuid
+
+    CustomerId:
+      name: customer_id
+      in: path
+      required: true
+      description: Customer UUID
+      schema:
+        type: string
+        format: uuid
+
+    CarId:
+      name: car_id
+      in: path
+      required: true
+      description: Car UUID
+      schema:
+        type: string
+        format: uuid
+
+    StatusParam:
+      name: status
+      in: path
+      required: true
+      description: Request status
+      schema:
+        type: string
+        enum: [pending, approved, rejected, cancelled, completed]
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Purchases
+    description: Automotive purchase requests management operations
