@@ -34,8 +34,7 @@ impl ServiceCampaignRepositoryImpl {
     pub fn new(pool: DbPool) -> Self {
         Self { pool }
     }
-
-    // Вспомогательная функция для преобразования строки в ServiceCampaignStatus
+    
     fn status_from_str(status: &str) -> ServiceCampaignStatus {
         match status.to_lowercase().as_str() {
             "active" => ServiceCampaignStatus::Active,
@@ -44,8 +43,7 @@ impl ServiceCampaignRepositoryImpl {
             _ => ServiceCampaignStatus::Active, // default
         }
     }
-
-    // Вспомогательная функция для создания ServiceCampaign из row
+    
     fn campaign_from_row(&self, row: sqlx::postgres::PgRow) -> Result<ServiceCampaign, Error> {
         let target_vins: Vec<String> = row.try_get("target_vins")?;
         let required_parts: Vec<Uuid> = row.try_get("required_parts")?;

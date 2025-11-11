@@ -99,8 +99,6 @@ pub async fn create_brand_handler(
             "details": validation_errors
         }));
     }
-
-    // Проверка уникальности названия бренда
     match repo.exists_by_name(&create_request.name).await {
         Ok(true) => {
             return HttpResponse::BadRequest().json(serde_json::json!({
@@ -142,8 +140,6 @@ pub async fn update_brand_handler(
             "details": validation_errors
         }));
     }
-
-    // Если обновляется название, проверяем уникальность
     if let Some(new_name) = &update_request.name {
         match repo.exists_by_name(new_name).await {
             Ok(true) => {

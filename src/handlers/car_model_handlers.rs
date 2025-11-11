@@ -96,8 +96,6 @@ pub async fn create_car_model_handler(
             "details": validation_errors
         }));
     }
-
-    // Проверка уникальности комбинации бренда и названия модели
     match repo.exists_by_brand_and_name(create_request.brand_id, &create_request.name).await {
         Ok(true) => {
             return HttpResponse::BadRequest().json(serde_json::json!({
@@ -139,8 +137,6 @@ pub async fn update_car_model_handler(
             "details": validation_errors
         }));
     }
-
-    // Если обновляется название или бренд, проверяем уникальность
     if update_request.name.is_some() || update_request.brand_id.is_some() {
         let current_model = match repo.find_by_id(id).await {
             Ok(Some(model)) => model,
@@ -157,8 +153,6 @@ pub async fn update_car_model_handler(
 
         let new_name = update_request.name.as_ref().unwrap_or(&current_model.name);
         let new_brand_id = update_request.brand_id.unwrap_or(current_model.brand_id);
-
-        // Проверяем, существует ли уже модель с таким названием в этом бренде
         if new_name != &current_model.name || new_brand_id != current_model.brand_id {
             match repo.exists_by_brand_and_name(new_brand_id, new_name).await {
                 Ok(true) => {

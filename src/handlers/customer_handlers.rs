@@ -58,8 +58,7 @@ pub async fn create_customer_handler(
             "details": validation_errors
         }));
     }
-
-    // Проверка уникальности email
+    
     match repo.exists_by_email(&create_request.email).await {
         Ok(true) => {
             return HttpResponse::BadRequest().json(serde_json::json!({

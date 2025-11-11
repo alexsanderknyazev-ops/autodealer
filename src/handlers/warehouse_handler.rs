@@ -138,8 +138,6 @@ pub async fn create_warehouse_item_handler(
             "details": validation_errors
         }));
     }
-
-    // Проверка существования позиции для этой запчасти
     match repo.exists_by_part_id(create_request.part_id).await {
         Ok(true) => {
             return HttpResponse::Conflict().json(serde_json::json!({

@@ -102,10 +102,9 @@ pub async fn create_purchase_handler(
             "details": validation_errors
         }));
     }
-
-    // Проверяем что автомобиль существует
+    
     match car_repo.find_by_id(create_request.car_id).await {
-        Ok(Some(_)) => {}, // Автомобиль существует
+        Ok(Some(_)) => {},
         Ok(None) => {
             return HttpResponse::BadRequest().json(serde_json::json!({
                 "error": "Car not found"
@@ -121,7 +120,7 @@ pub async fn create_purchase_handler(
 
     // Проверяем что клиент существует
     match customer_repo.find_by_id(create_request.customer_id).await {
-        Ok(Some(_)) => {}, // Клиент существует
+        Ok(Some(_)) => {},
         Ok(None) => {
             return HttpResponse::BadRequest().json(serde_json::json!({
                 "error": "Customer not found"

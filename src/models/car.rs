@@ -56,5 +56,5 @@ pub struct UpdateCarRequest {
     pub fuel_type: Option<FuelType>,
     pub transmission: Option<Transmission>,
     pub status: Option<CarStatus>,
-    pub completed_service_campaigns: Option<Vec<Uuid>>, // ← ДОБАВЛЯЕМ
+    pub completed_service_campaigns: Option<Vec<Uuid>>,
 }

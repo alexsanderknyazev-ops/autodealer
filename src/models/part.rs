@@ -10,8 +10,8 @@ pub struct Part {
     pub article: String,
     #[validate(length(min = 1, message = "Название не может быть пустым"))]
     pub name: String,
-    pub brand_id: Uuid, // ← ДОБАВЛЯЕМ ссылку на бренд
-    pub car_model_id: Uuid, // ← ДОБАВЛЯЕМ ссылку на модель
+    pub brand_id: Uuid,
+    pub car_model_id: Uuid,
     #[validate(range(min = 0.0))]
     pub purchase_price: f64,
     #[validate(range(min = 0.0))]
@@ -27,8 +27,8 @@ pub struct CreatePartRequest {
     pub article: String,
     #[validate(length(min = 1))]
     pub name: String,
-    pub brand_id: Uuid, // ← ДОБАВЛЯЕМ
-    pub car_model_id: Uuid, // ← ДОБАВЛЯЕМ
+    pub brand_id: Uuid, 
+    pub car_model_id: Uuid, 
     #[validate(range(min = 0.0))]
     pub purchase_price: f64,
     #[validate(range(min = 0.0))]

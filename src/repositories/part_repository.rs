@@ -106,7 +106,7 @@ impl PartRepository for PartRepositoryImpl {
             car_model_id: row.car_model_id.unwrap(),
             purchase_price: row.purchase_price,
             sale_price: row.sale_price,
-            compatible_vins: row.compatible_vins, // Убрали unwrap_or_default()
+            compatible_vins: row.compatible_vins,
             created_at: row.created_at,
             updated_at: row.updated_at,
         }))
@@ -162,7 +162,7 @@ impl PartRepository for PartRepositoryImpl {
             car_model_id: row.car_model_id.unwrap(),
             purchase_price: row.purchase_price,
             sale_price: row.sale_price,
-            compatible_vins: row.compatible_vins, // Убрали unwrap_or_default()
+            compatible_vins: row.compatible_vins,
             created_at: row.created_at,
             updated_at: row.updated_at,
         }).collect())
@@ -241,7 +241,7 @@ impl PartRepository for PartRepositoryImpl {
             car_model_id: row.car_model_id.unwrap(),
             purchase_price: row.purchase_price,
             sale_price: row.sale_price,
-            compatible_vins: row.compatible_vins, // Убрали unwrap_or_default()
+            compatible_vins: row.compatible_vins,
             created_at: row.created_at,
             updated_at: row.updated_at,
         })
@@ -249,10 +249,8 @@ impl PartRepository for PartRepositoryImpl {
 
     async fn update(&self, id: Uuid, update_request: &UpdatePartRequest) -> Result<Option<Part>, Error> {
         let now = chrono::Utc::now();
-
-        // Сначала получаем текущую запчасть
+        
         if let Some(current_part) = self.find_by_id(id).await? {
-            // Подготавливаем значения для обновления
             let article = update_request.article.as_ref().unwrap_or(&current_part.article);
             let name = update_request.name.as_ref().unwrap_or(&current_part.name);
             let brand_id = update_request.brand_id.unwrap_or(current_part.brand_id);
@@ -291,7 +289,7 @@ impl PartRepository for PartRepositoryImpl {
                 car_model_id: row.car_model_id.unwrap(),
                 purchase_price: row.purchase_price,
                 sale_price: row.sale_price,
-                compatible_vins: row.compatible_vins, // Убрали unwrap_or_default()
+                compatible_vins: row.compatible_vins,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
             }))

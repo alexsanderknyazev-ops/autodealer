@@ -137,8 +137,6 @@ pub async fn create_part_handler(
             "details": validation_errors
         }));
     }
-
-    // Проверка уникальности артикула
     match repo.exists_by_article(&create_request.article).await {
         Ok(true) => {
             return HttpResponse::BadRequest().json(serde_json::json!({

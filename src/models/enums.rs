@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::Type;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Type)]
-#[sqlx(type_name = "VARCHAR")]  // Указываем что храним как VARCHAR в БД
+#[sqlx(type_name = "VARCHAR")] 
 pub enum FuelType {
     #[sqlx(rename = "Petrol")]
     Petrol,
